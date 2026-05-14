@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Test App — Home</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #303f9f 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 50px 20px; }
+    .home-title { color: white; font-size: 34px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .home-sub { color: rgba(255,255,255,0.7); font-size: 16px; margin-bottom: 44px; }
+    .pages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1050px; }
+    .page-card { background: white; border-radius: 14px; padding: 26px 20px; text-align: center; text-decoration: none; color: #333; box-shadow: 0 6px 24px rgba(0,0,0,0.2); transition: transform 0.2s, box-shadow 0.2s; }
+    .page-card:hover { transform: translateY(-5px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+    .page-card .icon { font-size: 40px; margin-bottom: 12px; display: block; }
+    .page-card .page-name { font-size: 16px; font-weight: 700; color: #1a237e; margin-bottom: 5px; }
+    .page-card .page-desc { font-size: 12px; color: #888; }
+    .footer { color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 50px; }
+  </style>
+</head>
+<body>
+  <div class="home-title">QA Testing Application</div>
+  <div class="home-sub">Select a module to begin testing</div>
+  <div class="pages-grid">
+    <a class="page-card" href="pages/01-hospital.html">
+      <span class="icon">🏥</span>
+      <div class="page-name">Hospital</div>
+      <div class="page-desc">Patient Registration</div>
+    </a>
+    <a class="page-card" href="pages/02-hotel.html">
+      <span class="icon">🏨</span>
+      <div class="page-name">Hotel</div>
+      <div class="page-desc">Room Booking</div>
+    </a>
+    <a class="page-card" href="pages/03-ecommerce.html">
+      <span class="icon">🛒</span>
+      <div class="page-name">E-Commerce</div>
+      <div class="page-desc">Product Order</div>
+    </a>
+    <a class="page-card" href="pages/04-hr.html">
+      <span class="icon">👤</span>
+      <div class="page-name">HR Portal</div>
+      <div class="page-desc">Employee Onboarding</div>
+    </a>
+    <a class="page-card" href="pages/05-flight.html">
+      <span class="icon">✈️</span>
+      <div class="page-name">Flight</div>
+      <div class="page-desc">Ticket Booking</div>
+    </a>
+    <a class="page-card" href="pages/06-restaurant.html">
+      <span class="icon">🍽️</span>
+      <div class="page-name">Restaurant</div>
+      <div class="page-desc">Table Reservation</div>
+    </a>
+    <a class="page-card" href="pages/07-school.html">
+      <span class="icon">🎓</span>
+      <div class="page-name">School</div>
+      <div class="page-desc">Student Enrollment</div>
+    </a>
+    <a class="page-card" href="pages/08-banking.html">
+      <span class="icon">🏦</span>
+      <div class="page-name">Banking</div>
+      <div class="page-desc">Account Opening</div>
+    </a>
+    <a class="page-card" href="pages/09-realestate.html">
+      <span class="icon">🏠</span>
+      <div class="page-name">Real Estate</div>
+      <div class="page-desc">Property Listing</div>
+    </a>
+    <a class="page-card" href="pages/10-event.html">
+      <span class="icon">🎫</span>
+      <div class="page-name">Events</div>
+      <div class="page-desc">Event Registration</div>
+    </a>
+  </div>
+  <div class="footer">QA Interview Test Application — Find the bugs!</div>
+</body>
+</html>

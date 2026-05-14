@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flight Ticket Booking</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+<header class="page-header">
+  <div class="header-left">
+    <span style="font-size:30px;">✈️</span>
+    <!-- BUG #1: alt text says "Hotel Logo" -->
+    <img src="../assets/airline-logo.png" alt="Hotel Logo" class="header-logo" style="display:none;">
+    <h1>Flight Ticket Booking</h1>
+  </div>
+  <div class="info-btn">ℹ
+    <div class="info-tooltip">Book a flight by selecting trip type, route, travel date, and passenger details. Provide passport info and seat preferences to complete your booking.</div>
+  </div>
+</header>
+
+<div class="container">
+  <a href="../index.html" class="back-link">← Home</a>
+  <div class="card">
+    <div class="card-title">Book Your Flight</div>
+    <form id="flightForm">
+      <div class="form-grid">
+
+        <div class="section-label">Trip Information</div>
+
+        <div class="form-group full-width">
+          <label>Trip Type <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="tripType" value="one-way" required onchange="toggleReturn()"> One-way</label>
+            <label class="radio-option"><input type="radio" name="tripType" value="round-trip" onchange="toggleReturn()"> Round-trip</label>
+          </div>
+        </div>
+
+        <!-- BUG #2: From and To fields are swapped in layout -->
+        <div class="form-group">
+          <label>To (Destination) <span class="required">*</span></label>
+          <input type="text" id="fromCity" list="cityList" placeholder="Departure city" required>
+        </div>
+
+        <div class="form-group">
+          <label>From (Origin) <span class="required">*</span></label>
+          <input type="text" id="toCity" list="cityList" placeholder="Destination city" required>
+        </div>
+
+        <datalist id="cityList">
+          <option value="Mumbai"><option value="Delhi"><option value="Bangalore">
+          <option value="Chennai"><option value="Kolkata"><option value="Hyderabad">
+          <option value="Pune"><option value="Ahmedabad"><option value="Dubai">
+          <option value="London"><option value="New York"><option value="Singapore">
+        </datalist>
+
+        <!-- BUG #7: departure date allows yesterday -->
+        <div class="form-group">
+          <label>Departure Date <span class="required">*</span></label>
+          <input type="date" id="departureDate" required>
+        </div>
+
+        <!-- BUG #5: return date shown and required even for one-way -->
+        <div class="form-group" id="returnDateField">
+          <label>Return Date <span class="required">*</span></label>
+          <input type="date" id="returnDate" required>
+        </div>
+
+        <!-- BUG #8: entering 0 passengers is allowed -->
+        <div class="form-group">
+          <label>Number of Passengers <span class="required">*</span></label>
+          <input type="number" id="passengers" value="1" required>
+        </div>
+
+        <!-- BUG #4: "First" class spelled "Frist" -->
+        <div class="form-group">
+          <label>Class <span class="required">*</span></label>
+          <select id="flightClass" required>
+            <option value="">Select class</option>
+            <option>Economy</option>
+            <option>Business</option>
+            <option>Frist Class</option>
+          </select>
+        </div>
+
+        <div class="section-label">Passenger Details</div>
+
+        <div class="form-group">
+          <label>Passenger Name <span class="required">*</span></label>
+          <input type="text" id="passengerName" placeholder="As on passport" required>
+        </div>
+
+        <div class="form-group">
+          <label>Passport Number <span class="required">*</span></label>
+          <input type="text" id="passportNo" placeholder="e.g. A1234567" required>
+        </div>
+
+        <!-- BUG #10: expired passport accepted (no min date validation) -->
+        <div class="form-group">
+          <label>Passport Expiry Date <span class="required">*</span></label>
+          <input type="date" id="passportExpiry" required>
+        </div>
+
+        <div class="form-group">
+          <label>Nationality <span class="required">*</span></label>
+          <select id="nationality" required>
+            <option value="">Select nationality</option>
+            <option>Indian</option><option>American</option><option>British</option>
+            <option>Australian</option><option>Other</option>
+          </select>
+        </div>
+
+        <!-- BUG #13: meal preference not included in API payload -->
+        <div class="form-group">
+          <label>Meal Preference</label>
+          <select id="mealPref">
+            <option value="">No preference</option>
+            <option>Vegetarian</option>
+            <option>Non-Vegetarian</option>
+            <option>Vegan</option>
+            <option>Jain</option>
+          </select>
+        </div>
+
+        <!-- BUG #3: "Middle" label says "Center" -->
+        <div class="form-group">
+          <label>Seat Preference</label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="seat" value="Window"> Window</label>
+            <label class="radio-option"><input type="radio" name="seat" value="Middle"> Center</label>
+            <label class="radio-option"><input type="radio" name="seat" value="Aisle"> Aisle</label>
+          </div>
+        </div>
+
+        <div class="section-label">Baggage & Extras</div>
+
+        <div class="form-group">
+          <label>Add Extra Baggage</label>
+          <div class="toggle-wrapper">
+            <label class="toggle">
+              <input type="checkbox" id="addBaggage" onchange="toggleBaggage()">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Include extra baggage</span>
+          </div>
+        </div>
+
+        <!-- BUG #6: slider shows kg but sends lbs to API -->
+        <div class="form-group conditional" id="baggageSection">
+          <label>Baggage Weight (kg)</label>
+          <div class="range-wrapper">
+            <input type="range" id="baggageWeight" min="0" max="30" value="15" oninput="updateBaggage()">
+            <span class="range-value" id="baggageVal">15 kg</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Contact Email <span class="required">*</span></label>
+          <input type="email" id="contactEmail" placeholder="your@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Contact Phone <span class="required">*</span></label>
+          <input type="tel" id="contactPhone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+
+        <!-- BUG #14: travel insurance stored as "on" string, not boolean -->
+        <div class="form-group full-width">
+          <label class="checkbox-option">
+            <input type="checkbox" id="travelInsurance"> Include Travel Insurance (₹499)
+          </label>
+        </div>
+
+      </div>
+
+      <!-- BUG #9: toast disappears instantly (0ms timeout in JS) -->
+      <button type="submit" class="btn-submit">Book Flight</button>
+    </form>
+  </div>
+
+  <div class="records-section">
+    <div class="records-title">My Bookings</div>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="../js/shared.js"></script>
+<script src="../js/flight.js"></script>
+</body>
+</html>

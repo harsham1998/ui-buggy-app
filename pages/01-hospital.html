@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital — Patient Registration</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+<header class="page-header">
+  <div class="header-left">
+    <!-- BUG #2: broken logo (404) -->
+    <img src="../assets/hospital-logo.png" alt="Hospital Logo" class="header-logo">
+    <h1>Patient Registration</h1>
+  </div>
+  <div class="info-btn">ℹ
+    <div class="info-tooltip">Register a new patient, assign a doctor, and schedule an appointment. Fill in personal details, select a department and doctor, choose an appointment slot, and submit.</div>
+  </div>
+</header>
+
+<div class="container">
+  <a href="../index.html" class="back-link">← Home</a>
+  <div class="card">
+    <div class="card-title">New Patient Registration</div>
+    <form id="patientForm">
+      <div class="form-grid">
+
+        <div class="section-label">Personal Information</div>
+
+        <!-- BUG #1: label says "Last Name" but field is full name -->
+        <div class="form-group">
+          <label>Last Name <span class="required">*</span></label>
+          <input type="text" id="fullName" placeholder="Enter full name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Date of Birth <span class="required">*</span></label>
+          <input type="date" id="dob" required>
+        </div>
+
+        <div class="form-group">
+          <label>Calculated Age</label>
+          <!-- BUG #7: age off by 1 year (in JS) -->
+          <input type="number" id="calcAge" class="calc-field" readonly placeholder="Auto-calculated">
+        </div>
+
+        <!-- BUG #4: "Other" radio option misaligned via inline style -->
+        <div class="form-group">
+          <label>Gender <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="gender" value="Male" required> Male</label>
+            <label class="radio-option"><input type="radio" name="gender" value="Female"> Female</label>
+            <label class="radio-option" style="margin-top:30px; margin-left:-55px;"><input type="radio" name="gender" value="Other"> Other</label>
+          </div>
+        </div>
+
+        <!-- BUG #3: "C+" is an invalid blood group -->
+        <div class="form-group">
+          <label>Blood Group <span class="required">*</span></label>
+          <select id="bloodGroup" required>
+            <option value="">Select blood group</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>C+</option>
+            <option>O+</option><option>O-</option>
+            <option>AB+</option><option>AB-</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Contact Number <span class="required">*</span></label>
+          <input type="tel" id="phone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address <span class="required">*</span></label>
+          <input type="email" id="email" placeholder="patient@email.com" required>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Address <span class="required">*</span></label>
+          <textarea id="address" placeholder="Enter full address" required></textarea>
+        </div>
+
+        <div class="section-label">Appointment Details</div>
+
+        <div class="form-group">
+          <label>Department <span class="required">*</span></label>
+          <select id="department" required onchange="filterDoctors()">
+            <option value="">Select department</option>
+            <option>Cardiology</option>
+            <option>Neurology</option>
+            <option>Orthopedics</option>
+            <option>Pediatrics</option>
+            <option>General Medicine</option>
+          </select>
+        </div>
+
+        <!-- BUG #6: doctor list never filters by department -->
+        <div class="form-group">
+          <label>Assign Doctor <span class="required">*</span></label>
+          <select id="doctor" required>
+            <option value="">Select doctor</option>
+            <option>Dr. Arjun Mehta (Cardiology)</option>
+            <option>Dr. Priya Nair (Neurology)</option>
+            <option>Dr. Ravi Kumar (Orthopedics)</option>
+            <option>Dr. Sunita Reddy (Pediatrics)</option>
+            <option>Dr. Vikram Das (General Medicine)</option>
+          </select>
+        </div>
+
+        <!-- BUG #5: no min date — past dates allowed -->
+        <div class="form-group">
+          <label>Appointment Date <span class="required">*</span></label>
+          <input type="date" id="appointmentDate" required>
+        </div>
+
+        <div class="form-group">
+          <label>Appointment Time <span class="required">*</span></label>
+          <input type="time" id="appointmentTime" required>
+        </div>
+
+        <div class="section-label">Emergency Contact</div>
+
+        <div class="form-group">
+          <label>Emergency Contact Name <span class="required">*</span></label>
+          <input type="text" id="emergencyName" placeholder="Contact person name" required>
+        </div>
+
+        <!-- BUG #12: missing required — emergency phone not required but should be -->
+        <div class="form-group">
+          <label>Emergency Contact Phone</label>
+          <input type="tel" id="emergencyPhone" placeholder="Emergency phone number">
+        </div>
+
+        <div class="section-label">Additional Information</div>
+
+        <!-- BUG #9: tooltip says PDF only but accept="*/*" allows all -->
+        <div class="form-group">
+          <label>Upload ID Proof</label>
+          <div class="hint">Accepted format: PDF only</div>
+          <label class="file-label" for="idProof">📎 Choose File</label>
+          <input type="file" id="idProof" accept="*/*">
+          <div class="file-name" id="idProofName">No file chosen</div>
+        </div>
+
+        <!-- BUG #13: toggle state never persists (no reload restore) -->
+        <div class="form-group">
+          <label>Insurance Active</label>
+          <div class="toggle-wrapper">
+            <label class="toggle">
+              <input type="checkbox" id="insuranceActive">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Enable Insurance Coverage</span>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Clinical Notes</label>
+          <textarea id="notes" placeholder="Any additional notes or pre-existing conditions..."></textarea>
+        </div>
+
+      </div>
+      <button type="submit" class="btn-submit">Register Patient</button>
+    </form>
+  </div>
+
+  <div class="records-section">
+    <div class="records-title">Registered Patients</div>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="../js/shared.js"></script>
+<script src="../js/hospital.js"></script>
+</body>
+</html>

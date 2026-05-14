@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Registration</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+<header class="page-header">
+  <div class="header-left">
+    <!-- BUG #1: logo is pixelated (oversized image rendered small) -->
+    <img src="../assets/event-banner.jpg" alt="Event" style="height:40px; width:40px; object-fit:cover; image-rendering:pixelated;">
+    <h1>Event Registration</h1>
+  </div>
+  <div class="info-btn">ℹ
+    <div class="info-tooltip">Register for an upcoming event. Select the event, choose your ticket type, enter attendee details, and complete payment. Coupons and group discounts are available.</div>
+  </div>
+</header>
+
+<div class="container">
+  <a href="../index.html" class="back-link">← Home</a>
+  <div class="card">
+    <div class="card-title">Event Registration Form</div>
+    <form id="eventForm">
+      <div class="form-grid">
+
+        <div class="section-label">Event Selection</div>
+
+        <div class="form-group">
+          <label>Select Event <span class="required">*</span></label>
+          <select id="eventName" required onchange="fillEventDetails()">
+            <option value="">Choose an event</option>
+            <option value="tech-summit">Tech Summit 2026</option>
+            <option value="design-conf">Design Conference 2026</option>
+            <option value="startup-expo">Startup Expo 2026</option>
+            <option value="ai-workshop">AI Workshop 2026</option>
+          </select>
+        </div>
+
+        <!-- BUG #3: event year shows 2025 (hardcoded in JS) -->
+        <div class="form-group">
+          <label>Event Date</label>
+          <input type="text" id="eventDate" class="calc-field" readonly placeholder="Auto-filled">
+        </div>
+
+        <div class="form-group">
+          <label>Venue</label>
+          <input type="text" id="eventVenue" class="calc-field" readonly placeholder="Auto-filled">
+        </div>
+
+        <!-- BUG #4: VIP label says "VVIP" -->
+        <div class="form-group full-width">
+          <label>Ticket Type <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="ticketType" value="General" required onchange="calcAmount()"> General (₹500)</label>
+            <label class="radio-option"><input type="radio" name="ticketType" value="VIP" onchange="calcAmount()"> VVIP (₹1,500)</label>
+            <label class="radio-option"><input type="radio" name="ticketType" value="Student" onchange="calcAmount(); toggleStudentId()"> Student (₹200)</label>
+          </div>
+        </div>
+
+        <!-- BUG #7: more than 10 tickets allowed (max not enforced on submit) -->
+        <div class="form-group">
+          <label>Number of Tickets <span class="required">*</span></label>
+          <input type="number" id="numTickets" value="1" min="1" max="10" required oninput="calcAmount()">
+          <div class="hint">Maximum 10 tickets per registration</div>
+        </div>
+
+        <div class="section-label">Attendee Details</div>
+
+        <div class="form-group">
+          <label>Attendee Name <span class="required">*</span></label>
+          <input type="text" id="attendeeName" placeholder="Full name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" id="attendeeEmail" placeholder="your@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Phone <span class="required">*</span></label>
+          <input type="tel" id="attendeePhone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+
+        <div class="form-group">
+          <label>Company / Organization</label>
+          <input type="text" id="company" placeholder="Company name">
+        </div>
+
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="jobTitle" placeholder="Your role">
+        </div>
+
+        <div class="form-group">
+          <label>Dietary Preference</label>
+          <select id="dietary">
+            <option value="">No preference</option>
+            <option>Vegetarian</option>
+            <option>Vegan</option>
+            <option>Non-Vegetarian</option>
+            <option>Gluten-free</option>
+          </select>
+        </div>
+
+        <!-- BUG #2: "XXL" size missing from dropdown -->
+        <div class="form-group">
+          <label>T-Shirt Size</label>
+          <select id="tshirtSize">
+            <option value="">Select size</option>
+            <option>XS</option><option>S</option><option>M</option>
+            <option>L</option><option>XL</option>
+          </select>
+        </div>
+
+        <!-- BUG #5: student ID upload not shown when "Student" selected (JS bug) -->
+        <div class="form-group conditional" id="studentIdSection">
+          <label>Upload Student ID <span class="required">*</span></label>
+          <label class="file-label" for="studentId">📄 Upload ID</label>
+          <input type="file" id="studentId" accept="image/*,.pdf">
+          <div class="file-name" id="studentIdName">No file chosen</div>
+        </div>
+
+        <div class="section-label">Payment</div>
+
+        <div class="form-group">
+          <label>Coupon Code</label>
+          <!-- BUG #6: "EVENT50" shows "10% off" in UI but applies 50% (or vice versa) -->
+          <input type="text" id="couponCode" placeholder="Enter coupon code">
+          <div class="hint" id="couponMsg">Try EVENT50 for 50% off</div>
+        </div>
+
+        <!-- BUG #8: total not recalculated when ticket type changes -->
+        <div class="form-group">
+          <label>Total Amount (₹)</label>
+          <input type="text" id="totalAmount" class="calc-field" readonly value="₹0">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Payment Method <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="payMethod" value="Card" required onchange="toggleCardField()"> Card</label>
+            <label class="radio-option"><input type="radio" name="payMethod" value="UPI" onchange="toggleCardField()"> UPI</label>
+            <label class="radio-option"><input type="radio" name="payMethod" value="Wallet" onchange="toggleCardField()"> Wallet</label>
+          </div>
+        </div>
+
+        <!-- BUG #13: card number stays in DOM and payload even for UPI/Wallet -->
+        <div class="form-group" id="cardFieldSection">
+          <label>Card Number</label>
+          <input type="text" id="cardNumber" placeholder="XXXX XXXX XXXX XXXX" maxlength="19">
+        </div>
+
+        <!-- BUG #10: newsletter sends value even when unchecked -->
+        <div class="form-group full-width">
+          <label class="checkbox-option">
+            <input type="checkbox" id="newsletter"> Subscribe to newsletter and event updates
+          </label>
+        </div>
+
+        <!-- BUG #12: terms not required — form submits without acceptance -->
+        <div class="form-group full-width">
+          <label class="checkbox-option">
+            <input type="checkbox" id="termsAccepted"> I accept the event terms and conditions and refund policy
+          </label>
+        </div>
+
+      </div>
+
+      <!-- BUG #9: success toast shows even on API error -->
+      <button type="submit" class="btn-submit">Complete Registration</button>
+      <button type="button" class="btn-secondary" onclick="applyCoupon()">Apply Coupon</button>
+    </form>
+  </div>
+
+  <div class="records-section">
+    <div class="records-title">My Registrations</div>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="../js/shared.js"></script>
+<script src="../js/event.js"></script>
+</body>
+</html>

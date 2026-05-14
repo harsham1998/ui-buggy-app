@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- BUG cross-page: title doesn't match heading -->
+  <title>Hotel Booking System</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+<header class="page-header">
+  <div class="header-left">
+    <!-- BUG #1: logo is stretched/distorted -->
+    <img src="../assets/hotel-logo.svg" alt="Hotel Logo" class="header-logo" style="width:80px; height:28px; object-fit:fill;">
+    <h1>Room Booking</h1>
+  </div>
+  <div class="info-btn">ℹ
+    <div class="info-tooltip">Book a hotel room by selecting your check-in and check-out dates, room type, number of guests, and amenities. Total price is calculated automatically.</div>
+  </div>
+</header>
+
+<div class="container">
+  <a href="../index.html" class="back-link">← Home</a>
+  <div class="card">
+    <div class="card-title">New Room Booking</div>
+    <form id="hotelForm">
+      <div class="form-grid">
+
+        <div class="section-label">Guest Details</div>
+
+        <div class="form-group">
+          <label>Guest Full Name <span class="required">*</span></label>
+          <input type="text" id="guestName" placeholder="Enter full name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address <span class="required">*</span></label>
+          <input type="email" id="guestEmail" placeholder="guest@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number <span class="required">*</span></label>
+          <input type="tel" id="guestPhone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+
+        <!-- BUG #14: saved as "hotelBooking" but list reads "bookings" -->
+        <!-- BUG #15 cross-page: nationality not required (blank allowed) -->
+        <div class="form-group">
+          <label>Nationality <span class="required">*</span></label>
+          <select id="nationality">
+            <option value="">Select nationality</option>
+            <option>Indian</option><option>American</option><option>British</option>
+            <option>Australian</option><option>Canadian</option><option>German</option>
+            <option>French</option><option>Japanese</option><option>Other</option>
+          </select>
+        </div>
+
+        <div class="section-label">Booking Details</div>
+
+        <div class="form-group">
+          <label>Check-in Date <span class="required">*</span></label>
+          <input type="date" id="checkin" required>
+        </div>
+
+        <div class="form-group">
+          <!-- BUG #5: no validation — checkout can be before checkin -->
+          <label>Check-out Date <span class="required">*</span></label>
+          <input type="date" id="checkout" required>
+        </div>
+
+        <div class="form-group">
+          <label>Number of Adults <span class="required">*</span></label>
+          <input type="number" id="adults" min="1" max="10" value="1" required>
+        </div>
+
+        <!-- BUG #2: label says "Number of Adults" instead of "Number of Children" -->
+        <div class="form-group">
+          <label>Number of Adults</label>
+          <input type="number" id="children" min="0" max="5" value="0">
+        </div>
+
+        <!-- BUG #4: "Suite" is spelled "Swite" -->
+        <div class="form-group">
+          <label>Room Type <span class="required">*</span></label>
+          <select id="roomType" required onchange="calcTotal()">
+            <option value="">Select room type</option>
+            <option value="Standard">Standard (₹3,000/night)</option>
+            <option value="Deluxe">Deluxe (₹5,000/night)</option>
+            <option value="Swite">Swite (₹9,000/night)</option>
+            <option value="Family">Family (₹6,500/night)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Bed Preference <span class="required">*</span></label>
+          <!-- BUG #3: radio buttons overflow horizontally on small screens (no wrapping) -->
+          <div class="radio-group" style="flex-wrap:nowrap; overflow:hidden;">
+            <label class="radio-option"><input type="radio" name="bedPref" value="Single" required> Single Bed</label>
+            <label class="radio-option"><input type="radio" name="bedPref" value="Double"> Double Bed</label>
+            <label class="radio-option"><input type="radio" name="bedPref" value="Twin"> Twin Beds</label>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Amenities</label>
+          <div class="checkbox-group">
+            <label class="checkbox-option"><input type="checkbox" name="amenity" value="WiFi"> WiFi</label>
+            <label class="checkbox-option"><input type="checkbox" name="amenity" value="Breakfast"> Breakfast</label>
+            <label class="checkbox-option"><input type="checkbox" name="amenity" value="Parking"> Parking</label>
+            <!-- BUG #8: Pool checkbox always disabled -->
+            <label class="checkbox-option"><input type="checkbox" name="amenity" value="Pool" disabled> Pool (N/A)</label>
+            <label class="checkbox-option"><input type="checkbox" name="amenity" value="Gym"> Gym</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Promo Code</label>
+          <!-- BUG #7: valid code "SAVE10" always shows "Invalid" -->
+          <input type="text" id="promoCode" placeholder="Enter promo code">
+          <div class="hint" id="promoMsg"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Previous Stay Rating</label>
+          <div class="star-rating" id="ratingStars">
+            <span class="star" data-i="0">★</span>
+            <span class="star" data-i="1">★</span>
+            <span class="star" data-i="2">★</span>
+            <span class="star" data-i="3">★</span>
+            <span class="star" data-i="4">★</span>
+          </div>
+          <!-- BUG #11: star rating not included in API payload -->
+          <input type="hidden" id="rating" value="0">
+        </div>
+
+        <div class="form-group">
+          <label>Upload Passport Copy</label>
+          <label class="file-label" for="passportFile">📎 Choose File</label>
+          <input type="file" id="passportFile">
+          <div class="file-name" id="passportFileName">No file chosen</div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Special Requests</label>
+          <textarea id="specialRequests" placeholder="Early check-in, extra pillows, etc."></textarea>
+        </div>
+
+        <div class="section-label">Price Summary</div>
+
+        <!-- BUG #6: Deluxe uses Standard rate in calculation (JS bug) -->
+        <!-- BUG #12: nights = checkout - checkin + 1 instead of just difference -->
+        <div class="form-group">
+          <label>Number of Nights</label>
+          <input type="number" id="numNights" class="calc-field" readonly value="0">
+        </div>
+
+        <div class="form-group">
+          <label>Total Price (₹)</label>
+          <input type="text" id="totalPrice" class="calc-field" readonly value="₹0.00">
+        </div>
+
+      </div>
+      <button type="submit" class="btn-submit">Confirm Booking</button>
+      <button type="button" class="btn-secondary" onclick="applyPromo()">Apply Promo</button>
+    </form>
+  </div>
+
+  <div class="records-section">
+    <div class="records-title">My Bookings</div>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="../js/shared.js"></script>
+<script src="../js/hotel.js"></script>
+</body>
+</html>

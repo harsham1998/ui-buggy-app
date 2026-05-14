@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- BUG cross-page: title says "Banking" instead of School -->
+  <title>Banking — Account Opening</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+<header class="page-header">
+  <div class="header-left">
+    <!-- BUG #1: school logo is 404 broken -->
+    <img src="../assets/school-crest.png" alt="School Crest" class="header-logo">
+    <h1>Student Enrollment</h1>
+  </div>
+  <div class="info-btn">ℹ
+    <div class="info-tooltip">Enroll a new student by filling in their personal and academic details, selecting grade and courses, and completing the fee payment information.</div>
+  </div>
+</header>
+
+<div class="container">
+  <a href="../index.html" class="back-link">← Home</a>
+  <div class="card">
+    <div class="card-title">New Student Enrollment</div>
+    <form id="schoolForm">
+      <div class="form-grid">
+
+        <div class="section-label">Student Information</div>
+
+        <div class="form-group">
+          <label>Student Full Name <span class="required">*</span></label>
+          <input type="text" id="studentName" placeholder="Enter full name" required>
+        </div>
+
+        <div class="form-group">
+          <!-- BUG #5: allows future dates beyond academic year -->
+          <label>Date of Birth <span class="required">*</span></label>
+          <input type="date" id="dob" required>
+        </div>
+
+        <div class="form-group">
+          <label>Gender <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="gender" value="Male" required> Male</label>
+            <label class="radio-option"><input type="radio" name="gender" value="Female"> Female</label>
+            <label class="radio-option"><input type="radio" name="gender" value="Other"> Other</label>
+          </div>
+        </div>
+
+        <div class="section-label">Parent / Guardian Details</div>
+
+        <!-- BUG #2: label says "Student Email" but it's the parent email field -->
+        <div class="form-group">
+          <label>Student Email <span class="required">*</span></label>
+          <input type="email" id="parentEmail" placeholder="parent@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Parent / Guardian Name <span class="required">*</span></label>
+          <input type="text" id="parentName" placeholder="Parent or guardian name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Parent Phone <span class="required">*</span></label>
+          <input type="tel" id="parentPhone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Home Address <span class="required">*</span></label>
+          <textarea id="address" placeholder="Full residential address" required></textarea>
+        </div>
+
+        <div class="section-label">Academic Details</div>
+
+        <!-- BUG #3: dropdown starts at "Grade 0" instead of "Grade 1" -->
+        <div class="form-group">
+          <label>Grade / Class <span class="required">*</span></label>
+          <select id="grade" required onchange="updateFee()">
+            <option value="">Select grade</option>
+            <option value="0">Grade 0</option>
+            <option value="1">Grade 1</option><option value="2">Grade 2</option>
+            <option value="3">Grade 3</option><option value="4">Grade 4</option>
+            <option value="5">Grade 5</option><option value="6">Grade 6</option>
+            <option value="7">Grade 7</option><option value="8">Grade 8</option>
+            <option value="9">Grade 9</option><option value="10">Grade 10</option>
+            <option value="11">Grade 11</option><option value="12">Grade 12</option>
+          </select>
+        </div>
+
+        <!-- BUG #6: fee never updates when grade changes (JS bug) -->
+        <!-- BUG #4: fee field is editable (should be readonly) -->
+        <div class="form-group">
+          <label>Annual Fee (₹)</label>
+          <input type="number" id="feeAmount" class="calc-field" value="0" placeholder="Auto-calculated by grade">
+        </div>
+
+        <!-- BUG #7: can select more than 3 courses (max not enforced) -->
+        <div class="form-group full-width">
+          <label>Courses (Max 3) <span class="required">*</span></label>
+          <div class="hint">Select up to 3 courses</div>
+          <div class="checkbox-group">
+            <label class="checkbox-option"><input type="checkbox" name="course" value="Mathematics"> Mathematics</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="Science"> Science</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="English"> English</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="History"> History</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="Geography"> Geography</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="Computer Science"> Computer Science</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="Physical Education"> Physical Education</label>
+            <label class="checkbox-option"><input type="checkbox" name="course" value="Arts"> Arts</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Enrollment Date <span class="required">*</span></label>
+          <input type="date" id="enrollmentDate" required>
+        </div>
+
+        <div class="form-group">
+          <label>Previous School</label>
+          <input type="text" id="prevSchool" placeholder="Previous school name">
+        </div>
+
+        <!-- BUG #8: "A" grade is missing from dropdown -->
+        <div class="form-group">
+          <label>Previous Academic Grade</label>
+          <select id="prevGrade">
+            <option value="">N/A</option>
+            <option>B</option><option>C</option>
+            <option>D</option><option>F</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Medical Conditions / Allergies</label>
+          <textarea id="medicalNotes" placeholder="Any known medical conditions or allergies..."></textarea>
+        </div>
+
+        <div class="section-label">Payment Details</div>
+
+        <!-- BUG #13: Cheque triggers no extra fields but API expects cheque number -->
+        <div class="form-group">
+          <label>Payment Method <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="payment" value="Online" required> Online</label>
+            <label class="radio-option"><input type="radio" name="payment" value="Cheque"> Cheque</label>
+            <label class="radio-option"><input type="radio" name="payment" value="Cash"> Cash</label>
+          </div>
+        </div>
+
+        <div class="section-label">Documents</div>
+
+        <!-- BUG #10: only images accepted, but tooltip says PDF/DOC allowed -->
+        <div class="form-group">
+          <label>Upload Birth Certificate</label>
+          <div class="hint">Accepted: PDF, DOC, JPG</div>
+          <label class="file-label" for="birthCert">📄 Upload</label>
+          <input type="file" id="birthCert" accept="image/*">
+          <div class="file-name" id="birthCertName">No file chosen</div>
+        </div>
+
+        <div class="form-group">
+          <label>Upload Transfer Certificate</label>
+          <div class="hint">Accepted: PDF, DOC, JPG</div>
+          <label class="file-label" for="transferCert">📄 Upload</label>
+          <input type="file" id="transferCert" accept="image/*">
+          <div class="file-name" id="transferCertName">No file chosen</div>
+        </div>
+
+        <!-- BUG #9: terms accepted not required — form submits without checking -->
+        <div class="form-group full-width">
+          <label>Terms & Conditions</label>
+          <label class="checkbox-option">
+            <input type="checkbox" id="termsAccepted"> I agree to the school's terms, conditions, and code of conduct
+          </label>
+        </div>
+
+      </div>
+      <button type="submit" class="btn-submit">Enroll Student</button>
+    </form>
+  </div>
+
+  <div class="records-section">
+    <div class="records-title">Enrolled Students</div>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="../js/shared.js"></script>
+<script src="../js/school.js"></script>
+</body>
+</html>

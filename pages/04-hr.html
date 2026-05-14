@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR Portal — Employee Onboarding</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+<header class="page-header">
+  <div class="header-left">
+    <!-- BUG #2: HR logo missing entirely (no img tag, just empty space placeholder) -->
+    <div style="width:40px;height:40px;background:rgba(255,255,255,0.1);border-radius:8px;"></div>
+    <h1>Employee Onboarding</h1>
+  </div>
+  <div class="info-btn">ℹ
+    <div class="info-tooltip">Add a new employee to the system. Fill in personal info, assign department, role, salary, and upload required documents. All fields marked * are mandatory.</div>
+  </div>
+</header>
+
+<div class="container">
+  <a href="../index.html" class="back-link">← Home</a>
+  <div class="card">
+    <div class="card-title">New Employee Registration</div>
+    <form id="hrForm">
+      <div class="form-grid">
+
+        <div class="section-label">Personal Information</div>
+
+        <div class="form-group">
+          <label>First Name <span class="required">*</span></label>
+          <input type="text" id="firstName" placeholder="First name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Last Name <span class="required">*</span></label>
+          <input type="text" id="lastName" placeholder="Last name" required>
+        </div>
+
+        <!-- BUG #3: placeholder says "Numbers only" but ID auto-generates alphanumeric -->
+        <div class="form-group">
+          <label>Employee ID <span class="required">*</span></label>
+          <input type="text" id="employeeId" placeholder="Numbers only" required>
+        </div>
+
+        <div class="form-group">
+          <label>Date of Birth <span class="required">*</span></label>
+          <!-- BUG #14: allows future dates (no max) -->
+          <input type="date" id="dob" required>
+        </div>
+
+        <div class="form-group">
+          <label>Gender <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="gender" value="Male" required> Male</label>
+            <label class="radio-option"><input type="radio" name="gender" value="Female"> Female</label>
+            <label class="radio-option"><input type="radio" name="gender" value="Other"> Other</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nationality <span class="required">*</span></label>
+          <select id="nationality" required>
+            <option value="">Select nationality</option>
+            <option>Indian</option><option>American</option><option>British</option>
+            <option>Australian</option><option>Other</option>
+          </select>
+        </div>
+
+        <div class="section-label">Contact Information</div>
+
+        <!-- BUG #1: "Work Email" label says "Personal Email" (duplicate label) -->
+        <div class="form-group">
+          <label>Personal Email <span class="required">*</span></label>
+          <input type="email" id="personalEmail" placeholder="personal@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Personal Email <span class="required">*</span></label>
+          <input type="email" id="workEmail" placeholder="name@company.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number <span class="required">*</span></label>
+          <input type="tel" id="phone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+
+        <div class="section-label">Employment Details</div>
+
+        <div class="form-group">
+          <label>Department <span class="required">*</span></label>
+          <select id="department" required>
+            <option value="">Select department</option>
+            <option>Engineering</option><option>Sales</option>
+            <option>Marketing</option><option>HR</option>
+            <option>Finance</option><option>Operations</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Role / Designation <span class="required">*</span></label>
+          <input type="text" id="role" placeholder="e.g. Senior Developer" required>
+        </div>
+
+        <!-- BUG #8: "Contract" option missing from radio group -->
+        <div class="form-group">
+          <label>Employment Type <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="empType" value="Full-time" required> Full-time</label>
+            <label class="radio-option"><input type="radio" name="empType" value="Part-time"> Part-time</label>
+          </div>
+        </div>
+
+        <!-- BUG #5: start date allows past dates (no min) -->
+        <div class="form-group">
+          <label>Start Date <span class="required">*</span></label>
+          <input type="date" id="startDate" required>
+        </div>
+
+        <!-- BUG #10: salary saved as string not number (in JS) -->
+        <div class="form-group">
+          <label>Annual Salary (₹) <span class="required">*</span></label>
+          <input type="text" id="salary" placeholder="e.g. 800000" required>
+        </div>
+
+        <div class="form-group">
+          <label>Reporting Manager</label>
+          <select id="manager">
+            <option value="">Select manager</option>
+            <option>Anita Sharma</option>
+            <option>Deepak Verma</option>
+            <option>Kavita Rao</option>
+            <option>Mohan Singh</option>
+          </select>
+        </div>
+
+        <div class="section-label">Skills & Documents</div>
+
+        <div class="form-group full-width">
+          <label>Skills</label>
+          <!-- BUG #7: removing one tag removes all tags (in JS) -->
+          <div id="tagsDisplay" class="tags-display"></div>
+          <select id="skillsSelect" onchange="addSkill()">
+            <option value="">Add a skill...</option>
+            <option>JavaScript</option><option>Python</option><option>Java</option>
+            <option>SQL</option><option>React</option><option>Project Management</option>
+            <option>Communication</option><option>Leadership</option>
+          </select>
+          <input type="hidden" id="skillsValue" value="">
+        </div>
+
+        <!-- BUG #4: profile photo preview is upside-down via CSS transform -->
+        <div class="form-group">
+          <label>Profile Photo</label>
+          <label class="file-label" for="photoFile">📷 Upload Photo</label>
+          <input type="file" id="photoFile" accept="image/*" onchange="previewPhoto()">
+          <div class="file-name" id="photoFileName">No file chosen</div>
+          <img id="photoPreview" style="display:none; width:80px; height:80px; border-radius:50%; margin-top:8px; object-fit:cover; transform:rotate(180deg);">
+        </div>
+
+        <div class="form-group">
+          <label>Upload Documents</label>
+          <label class="file-label" for="docFile">📄 Upload ID/Docs</label>
+          <input type="file" id="docFile">
+          <div class="file-name" id="docFileName">No file chosen</div>
+        </div>
+
+        <!-- BUG #11: background check consent not required — form submits without it -->
+        <div class="form-group full-width">
+          <label>Background Check Consent</label>
+          <label class="checkbox-option">
+            <input type="checkbox" id="bgConsent"> I consent to a background verification check
+          </label>
+        </div>
+
+        <!-- BUG #13: laptop toggle value is inverted (ON = false, OFF = true in JS) -->
+        <div class="form-group">
+          <label>Laptop Required</label>
+          <div class="toggle-wrapper">
+            <label class="toggle">
+              <input type="checkbox" id="laptopRequired">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Provide company laptop</span>
+          </div>
+        </div>
+
+        <!-- BUG #9: toast shows for 10 seconds (10000ms in JS instead of 3000ms) -->
+
+      </div>
+      <button type="submit" class="btn-submit">Add Employee</button>
+    </form>
+  </div>
+
+  <div class="records-section">
+    <div class="records-title">Employee Directory</div>
+    <div id="recordList"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="../js/shared.js"></script>
+<script src="../js/hr.js"></script>
+</body>
+</html>
