@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Key — Confidential</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 32px 16px 60px; }
+
+    .header { background: linear-gradient(135deg, #b71c1c, #c62828); color: white; padding: 24px 32px; border-radius: 12px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 24px; font-weight: 700; }
+    .header .sub { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+    .badge-conf { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .summary-card { background: white; border-radius: 10px; padding: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .summary-card .num { font-size: 32px; font-weight: 700; }
+    .summary-card .lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .num.easy { color: #2e7d32; } .num.medium { color: #e65100; } .num.hard { color: #b71c1c; } .num.total { color: #1a237e; }
+
+    .page-section { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 28px; overflow: hidden; }
+    .page-header { padding: 16px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; user-select: none; }
+    .page-header:hover { background: #fafafa; }
+    .page-icon { font-size: 24px; }
+    .page-title { font-size: 17px; font-weight: 700; color: #1a237e; flex: 1; }
+    .page-counts { display: flex; gap: 8px; }
+    .pill { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .pill.easy { background: #e8f5e9; color: #2e7d32; }
+    .pill.medium { background: #fff3e0; color: #e65100; }
+    .pill.hard { background: #ffebee; color: #b71c1c; }
+    .chevron { color: #aaa; font-size: 18px; transition: transform 0.2s; }
+    .chevron.open { transform: rotate(90deg); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f5f5f5; padding: 10px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; font-weight: 700; }
+    td { padding: 11px 16px; border-bottom: 1px solid #f5f5f5; vertical-align: top; line-height: 1.5; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .tier-easy { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #e8f5e9; color: #2e7d32; font-weight: 700; font-size: 11px; white-space: nowrap; }
+    .tier-medium { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #fff3e0; color: #e65100; font-weight: 700; font-size: 11px; white-space: nowrap; }
+    .tier-hard { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #ffebee; color: #b71c1c; font-weight: 700; font-size: 11px; white-space: nowrap; }
+
+    .bug-num { font-weight: 700; color: #999; font-size: 12px; }
+    .expected { color: #2e7d32; } .actual { color: #b71c1c; }
+    code { background: #f3f4ff; color: #3f51b5; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+    .global-section { background: #fffde7; border: 1px solid #f9a825; border-radius: 10px; padding: 20px 24px; margin-bottom: 28px; }
+    .global-section h2 { font-size: 16px; font-weight: 700; color: #f57f17; margin-bottom: 14px; }
+
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1.5px solid #ddd; background: white; cursor: pointer; font-size: 13px; font-weight: 600; color: #555; transition: all 0.15s; }
+    .filter-btn.active, .filter-btn:hover { border-color: #1a237e; color: #1a237e; background: #e8eaf6; }
+    .filter-btn.easy.active { border-color: #2e7d32; color: #2e7d32; background: #e8f5e9; }
+    .filter-btn.medium.active { border-color: #e65100; color: #e65100; background: #fff3e0; }
+    .filter-btn.hard.active { border-color: #b71c1c; color: #b71c1c; background: #ffebee; }
+
+    @media (max-width: 600px) { th:nth-child(4), td:nth-child(4) { display: none; } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🔑 QA Bug Answer Key</h1>
+    <div class="sub">138 deliberate bugs across 10 pages · Interviewer use only</div>
+  </div>
+  <div class="badge-conf">⛔ CONFIDENTIAL</div>
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card"><div class="num total">138</div><div class="lbl">Total Bugs</div></div>
+  <div class="summary-card"><div class="num easy">38</div><div class="lbl">Easy</div></div>
+  <div class="summary-card"><div class="num medium">50</div><div class="lbl">Medium</div></div>
+  <div class="summary-card"><div class="num hard">44</div><div class="lbl">Hard</div></div>
+  <div class="summary-card"><div class="num" style="color:#555">6</div><div class="lbl">Global</div></div>
+  <div class="summary-card"><div class="num" style="color:#555">10</div><div class="lbl">Pages</div></div>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterTier('all', this)">All</button>
+  <button class="filter-btn easy" onclick="filterTier('easy', this)">Easy</button>
+  <button class="filter-btn medium" onclick="filterTier('medium', this)">Medium</button>
+  <button class="filter-btn hard" onclick="filterTier('hard', this)">Hard</button>
+</div>
+
+<!-- GLOBAL BUGS -->
+<div class="global-section">
+  <h2>🌐 Global Bugs (all pages)</h2>
+  <table>
+    <thead><tr><th>#</th><th>Bug</th><th>How to Find</th><th>Expected → Actual</th></tr></thead>
+    <tbody>
+      <tr data-tier="easy"><td class="bug-num">G1</td><td>Success toast is <strong>red</strong></td><td>Submit any valid form</td><td><span class="expected">Green toast</span> → <span class="actual">Red toast</span></td></tr>
+      <tr data-tier="easy"><td class="bug-num">G2</td><td>Error toast is <strong>green</strong></td><td>Submit incomplete form</td><td><span class="expected">Red toast</span> → <span class="actual">Green toast</span></td></tr>
+      <tr data-tier="medium"><td class="bug-num">G3</td><td>ℹ tooltip on E-Commerce describes Hotel page</td><td>Hover ℹ on Page 3</td><td><span class="expected">"Browse products..."</span> → <span class="actual">"Book a hotel room..."</span></td></tr>
+      <tr data-tier="medium"><td class="bug-num">G4</td><td>"← Home" link broken on Restaurant page</td><td>Click Home on Page 6</td><td><span class="expected">Goes to home</span> → <span class="actual">404 (wrong path)</span></td></tr>
+      <tr data-tier="easy"><td class="bug-num">G5</td><td>Browser tab title mismatch — Hotel</td><td>Check tab title on Page 2</td><td><span class="expected">"Hotel — Room Booking"</span> → <span class="actual">"Hotel Booking System"</span></td></tr>
+      <tr data-tier="easy"><td class="bug-num">G6</td><td>Browser tab title mismatch — School</td><td>Check tab title on Page 7</td><td><span class="expected">"School — Student Enrollment"</span> → <span class="actual">"Banking — Account Opening"</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PAGE 1 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🏥</span>
+    <span class="page-title">Page 1 — Hospital: Patient Registration</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">4 Hard</span>
+    </div>
+    <span class="chevron open">›</span>
+  </div>
+  <div class="page-body">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>"Full Name" field labeled "Last Name"</td><td>Look at first form field label</td><td><span class="expected">"Full Name"</span> → <span class="actual">"Last Name"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>Broken logo in header</td><td>View page header</td><td><span class="expected">Logo visible</span> → <span class="actual">Broken image (404)</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Invalid blood group "C+" in dropdown</td><td>Open Blood Group dropdown</td><td><span class="expected">A+, A-, B+, B-, O+, O-, AB+, AB-</span> → <span class="actual">Includes "C+"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>"Other" gender radio misaligned</td><td>View Gender field</td><td><span class="expected">Options aligned in row</span> → <span class="actual">"Other" displaced below</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Appointment date allows past dates</td><td>Select yesterday as appointment date</td><td><span class="expected">Past dates disabled</span> → <span class="actual">Past dates accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Doctor dropdown not filtered by department</td><td>Select Cardiology, check doctor list</td><td><span class="expected">Only Cardiology doctors</span> → <span class="actual">All doctors shown</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>Calculated age is off by 1 year</td><td>Enter a DOB, check auto-calculated age</td><td><span class="expected">Correct age</span> → <span class="actual">Age + 1</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Emergency phone not required</td><td>Leave emergency phone blank, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Form submits</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>File upload accepts all types despite "PDF only" hint</td><td>Try uploading a .jpg as ID proof</td><td><span class="expected">Only PDF accepted</span> → <span class="actual">All types accepted</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>API returns 500 on valid submission</td><td>Fill all fields, submit, check Network tab</td><td><span class="expected">201 Created</span> → <span class="actual">500 Internal Server Error</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>Patient list always empty after save</td><td>Submit patient, check list below form</td><td><span class="expected">Patient appears</span> → <span class="actual">Always empty (saves <code>patientData</code>, reads <code>patients</code>)</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Insurance toggle resets on reload</td><td>Enable insurance, reload page</td><td><span class="expected">Toggle stays ON</span> → <span class="actual">Resets to OFF</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Appointment time missing from API payload</td><td>Submit form, inspect Network request body</td><td><span class="expected"><code>appointmentTime</code> present</span> → <span class="actual">Field absent</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🏨</span>
+    <span class="page-title">Page 2 — Hotel: Room Booking</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">4 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Hotel logo stretched/distorted</td><td>View page header</td><td><span class="expected">Proper logo</span> → <span class="actual">Stretched horizontally</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>"Number of Children" labeled "Number of Adults"</td><td>Look at guest count fields</td><td><span class="expected">Two distinct labels</span> → <span class="actual">Both say "Number of Adults"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Bed preference radios overflow on narrow screen</td><td>Narrow browser window</td><td><span class="expected">Options wrap</span> → <span class="actual">Options clip/overflow</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>"Suite" spelled "Swite"</td><td>Open Room Type dropdown</td><td><span class="expected">"Suite"</span> → <span class="actual">"Swite"</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Checkout date can be before check-in</td><td>Set checkout earlier than check-in</td><td><span class="expected">Validation error</span> → <span class="actual">No error</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Deluxe room uses Standard rate</td><td>Select Deluxe, 1 night</td><td><span class="expected">₹5,000</span> → <span class="actual">₹3,000</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>Valid promo "SAVE10" always shows Invalid</td><td>Enter SAVE10, click Apply</td><td><span class="expected">Discount applied</span> → <span class="actual">"Invalid promo code"</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>"Pool" amenity always disabled</td><td>View Amenities checkboxes</td><td><span class="expected">All selectable</span> → <span class="actual">Pool is greyed out</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>Nights count is off by 1</td><td>Book Mon–Wed (2 nights)</td><td><span class="expected">2 nights</span> → <span class="actual">3 nights</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>API returns 200 with error body on valid booking</td><td>Submit valid booking, check Network response body</td><td><span class="expected"><code>{"bookingId":"..."}</code></span> → <span class="actual"><code>{"status":"error"}</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>Star rating not in API payload</td><td>Rate 4 stars, submit, inspect Network</td><td><span class="expected"><code>rating: 4</code></span> → <span class="actual">Field absent</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Booking history always empty</td><td>Make booking, scroll to history</td><td><span class="expected">Booking shows</span> → <span class="actual">Empty (saves <code>hotelBooking</code>, reads <code>bookings</code>)</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Nationality blank accepted</td><td>Leave nationality blank, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Form submits</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🛒</span>
+    <span class="page-title">Page 3 — E-Commerce: Product Order</span>
+    <div class="page-counts">
+      <span class="pill easy">3 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">5 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Cart badge always shows 0</td><td>Add any product to cart</td><td><span class="expected">Badge = item count</span> → <span class="actual">Always 0</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>Pincode accepts letters</td><td>Type "ABCDEF" in Pincode</td><td><span class="expected">Numbers only</span> → <span class="actual">Letters accepted</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>"Place Order" button floats outside form</td><td>Scroll to bottom of form</td><td><span class="expected">Button aligned inside form</span> → <span class="actual">Floats outside container</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">4</td><td><span class="tier-medium">Medium</span></td><td>Search is case-sensitive</td><td>Search "shirt" (lowercase)</td><td><span class="expected">Finds T-Shirt</span> → <span class="actual">No results</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Category filter clears search text</td><td>Type in search, then select a category</td><td><span class="expected">Search preserved</span> → <span class="actual">Search box cleared</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Qty + button adds 2 instead of 1</td><td>Add item, click + once</td><td><span class="expected">Qty +1</span> → <span class="actual">Qty +2</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>Tax label says 5% but calculated at 18%</td><td>Add ₹1,000 item, check tax</td><td><span class="expected">₹50 (5%)</span> → <span class="actual">₹180 (18%)</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Coupon DISC20 applies 10% not 20%</td><td>Enter DISC20, apply</td><td><span class="expected">20% off</span> → <span class="actual">10% off</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>Card field stays visible for COD</td><td>Select COD payment</td><td><span class="expected">Card field hidden</span> → <span class="actual">Card field visible</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>API returns 201 for empty cart</td><td>Submit with empty cart, check Network</td><td><span class="expected">400 Bad Request</span> → <span class="actual">201 Created</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>Delivery date allows past dates</td><td>Select past delivery date</td><td><span class="expected">Future only</span> → <span class="actual">Past accepted</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Cart total stale after item removal</td><td>Add 2 items, remove one, check total</td><td><span class="expected">Total recalculates</span> → <span class="actual">Stale total</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Order history always empty</td><td>Place order, check history</td><td><span class="expected">Order shown</span> → <span class="actual">Empty (saves <code>orders</code>, reads <code>orderHistory</code>)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 4 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">👤</span>
+    <span class="page-title">Page 4 — HR: Employee Onboarding</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">4 Medium</span><span class="pill hard">5 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Work Email labeled "Personal Email" (duplicate)</td><td>View Contact Information labels</td><td><span class="expected">Two distinct labels</span> → <span class="actual">Both say "Personal Email"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>HR logo missing from header</td><td>View page header</td><td><span class="expected">Logo visible</span> → <span class="actual">Empty grey box</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Employee ID has letters despite "Numbers only" hint</td><td>View Employee ID field on load</td><td><span class="expected">Numeric ID</span> → <span class="actual">Alphanumeric e.g. EMP3X7K2</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>Profile photo preview is upside-down</td><td>Upload any photo</td><td><span class="expected">Correct orientation</span> → <span class="actual">Rotated 180°</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Start date allows past dates</td><td>Select a past start date</td><td><span class="expected">Today or future only</span> → <span class="actual">Past accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>DOB allows future dates</td><td>Set DOB to next year</td><td><span class="expected">Past dates only</span> → <span class="actual">Future accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>Removing one skill clears all skills</td><td>Add 3 skills, click × on one</td><td><span class="expected">Only that skill removed</span> → <span class="actual">All skills cleared</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>"Contract" employment type missing</td><td>View Employment Type options</td><td><span class="expected">Full-time, Part-time, Contract</span> → <span class="actual">Only Full-time and Part-time</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">9</td><td><span class="tier-hard">Hard</span></td><td>Success toast stays for 10 seconds</td><td>Submit valid form, watch toast</td><td><span class="expected">Disappears after 3s</span> → <span class="actual">Stays 10 seconds</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>API returns 400 with empty response body</td><td>Trigger validation failure, inspect response</td><td><span class="expected">JSON error message</span> → <span class="actual">Empty body</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>Background check consent not required</td><td>Leave consent unchecked, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Form submits</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Salary saved as string not number</td><td>Submit, inspect localStorage</td><td><span class="expected"><code>salary: 800000</code></span> → <span class="actual"><code>salary: "800000"</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Laptop toggle value inverted</td><td>Enable toggle, inspect payload</td><td><span class="expected"><code>laptopRequired: true</code></span> → <span class="actual"><code>laptopRequired: false</code></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 5 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">✈️</span>
+    <span class="page-title">Page 5 — Flight: Ticket Booking</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">5 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Logo alt text says "Hotel Logo"</td><td>Inspect header img element</td><td><span class="expected">alt="Airline Logo"</span> → <span class="actual">alt="Hotel Logo"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>"From" and "To" fields are swapped</td><td>View route fields</td><td><span class="expected">From = Origin</span> → <span class="actual">From = Destination label</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Seat "Middle" labeled "Center"</td><td>View Seat Preference radios</td><td><span class="expected">"Middle"</span> → <span class="actual">"Center"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>"First Class" spelled "Frist Class"</td><td>Open Class dropdown</td><td><span class="expected">"First Class"</span> → <span class="actual">"Frist Class"</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Return date shown/required for One-way</td><td>Select One-way trip type</td><td><span class="expected">Return date hidden</span> → <span class="actual">Visible and required</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Departure date allows yesterday</td><td>Select yesterday</td><td><span class="expected">Yesterday disabled</span> → <span class="actual">Selectable</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>0 passengers allowed</td><td>Set passengers to 0, submit</td><td><span class="expected">Min 1 enforced</span> → <span class="actual">0 accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Toast disappears instantly (0ms)</td><td>Submit form, watch toast</td><td><span class="expected">Visible ~3 seconds</span> → <span class="actual">Flashes and gone</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>Baggage weight sent in lbs not kg</td><td>Set 10 kg, submit, inspect payload</td><td><span class="expected"><code>baggageWeight: 10</code></span> → <span class="actual"><code>22 lbs</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>Expired passport accepted</td><td>Enter past passport expiry, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Accepted</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>Round-trip return can be before departure</td><td>Set return before departure</td><td><span class="expected">Validation error</span> → <span class="actual">No error</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>API returns 404 for flight endpoint</td><td>Submit booking, check Network tab</td><td><span class="expected">201 Created</span> → <span class="actual">404 (file is <code>flights.js</code>, called as <code>/api/flight</code>)</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Meal preference missing from payload</td><td>Select Vegan, submit, inspect Network</td><td><span class="expected"><code>mealPref</code> present</span> → <span class="actual">Field absent</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">14</td><td><span class="tier-hard">Hard</span></td><td>Insurance stored as "on" string not boolean</td><td>Check insurance, inspect payload</td><td><span class="expected"><code>travelInsurance: true</code></span> → <span class="actual"><code>travelInsurance: "on"</code></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 6 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🍽️</span>
+    <span class="page-title">Page 6 — Restaurant: Table Reservation</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">4 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Logo overlaps page title</td><td>View page header</td><td><span class="expected">Logo beside title</span> → <span class="actual">Logo on top of title</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>Party size slider goes to 20 (label says 1-12)</td><td>Drag slider to max</td><td><span class="expected">Max = 12</span> → <span class="actual">Max = 20</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Outdoor seating has no icon</td><td>View Seating Preference options</td><td><span class="expected">Icon for Outdoor</span> → <span class="actual">No icon</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>"Casual" spelled "Casuel"</td><td>Open Occasion dropdown</td><td><span class="expected">"Casual"</span> → <span class="actual">"Casuel"</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Reservation date allows past</td><td>Select a past date</td><td><span class="expected">Future only</span> → <span class="actual">Past accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Selecting Vegan deselects Vegetarian</td><td>Check Vegetarian then Vegan</td><td><span class="expected">Both selectable</span> → <span class="actual">Vegetarian auto-unchecked</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>Promo code not cleared after applying</td><td>Enter code, click Apply Promo</td><td><span class="expected">Field cleared</span> → <span class="actual">Old code remains</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Toast appears behind form (z-index)</td><td>Submit form, observe toast position</td><td><span class="expected">Toast on top</span> → <span class="actual">Toast behind form</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>SMS toggle makes phone non-required</td><td>Enable SMS, remove phone, submit</td><td><span class="expected">Phone still required</span> → <span class="actual">Submits without phone</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>Reservation time missing from payload</td><td>Set time, submit, inspect Network</td><td><span class="expected"><code>resTime</code> present</span> → <span class="actual">Field absent</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>Spend slider sends value +10</td><td>Set $50, submit, inspect payload</td><td><span class="expected"><code>estimatedSpend: 50</code></span> → <span class="actual"><code>estimatedSpend: 60</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>API accepts party over max capacity</td><td>Submit with 15 guests, check response</td><td><span class="expected">400 error</span> → <span class="actual">200 OK</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Star rating resets after submit</td><td>Rate 4 stars, submit, check stars</td><td><span class="expected">Stars retained</span> → <span class="actual">Reset to 0</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 7 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🎓</span>
+    <span class="page-title">Page 7 — School: Student Enrollment</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">6 Medium</span><span class="pill hard">4 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>School logo broken (404)</td><td>View page header</td><td><span class="expected">School crest</span> → <span class="actual">Broken image</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>Parent Email labeled "Student Email"</td><td>View parent details section</td><td><span class="expected">"Parent Email"</span> → <span class="actual">"Student Email"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Grade dropdown starts at "Grade 0"</td><td>Open Grade dropdown</td><td><span class="expected">Starts at Grade 1</span> → <span class="actual">First option: Grade 0</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>Fee Amount field is editable</td><td>Click fee field, try typing</td><td><span class="expected">Read-only</span> → <span class="actual">Editable</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Student DOB allows future dates</td><td>Set DOB to next year</td><td><span class="expected">Past only</span> → <span class="actual">Future accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Fee never updates when grade changes</td><td>Select Grade 1, then Grade 12</td><td><span class="expected">Fee updates per grade</span> → <span class="actual">Always stays 0</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>More than 3 courses selectable</td><td>Check 4 or more courses</td><td><span class="expected">Max 3 enforced</span> → <span class="actual">4+ accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>"A" grade missing from Previous Grade</td><td>Open Previous Academic Grade dropdown</td><td><span class="expected">A, B, C, D, F</span> → <span class="actual">Only B, C, D, F</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>Terms checkbox not required</td><td>Leave terms unchecked, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Form submits</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">10</td><td><span class="tier-medium">Medium</span></td><td>File upload only accepts images (hint says PDF/DOC)</td><td>Try uploading PDF birth certificate</td><td><span class="expected">PDF accepted</span> → <span class="actual">Only images accepted</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>API returns 500 on valid enrollment</td><td>Submit valid form, check Network</td><td><span class="expected">201 Created</span> → <span class="actual">500 Internal Server Error</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Cheque payment has no cheque number field</td><td>Select Cheque, submit</td><td><span class="expected">Cheque number field appears</span> → <span class="actual">No field; API gets no cheque number</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>New enrollment overwrites previous</td><td>Enroll 2 students, check list</td><td><span class="expected">Both students shown</span> → <span class="actual">Only latest shown</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 8 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🏦</span>
+    <span class="page-title">Page 8 — Banking: Account Opening</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">3 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Bank logo misaligned (centered)</td><td>View page header</td><td><span class="expected">Logo left-aligned</span> → <span class="actual">Logo centered</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>PAN placeholder says "Enter Aadhaar"</td><td>View PAN Number field</td><td><span class="expected">Placeholder: "ABCDE1234F"</span> → <span class="actual">"Enter Aadhaar"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>"Father" appears twice in Nominee dropdown</td><td>Open Nominee Relationship</td><td><span class="expected">Each option once</span> → <span class="actual">"Father" listed twice</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>"Fixed Deposit" shown as "FX Dep"</td><td>Open Account Type dropdown</td><td><span class="expected">"Fixed Deposit"</span> → <span class="actual">"FX Dep"</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>PAN format not validated</td><td>Enter "12345" as PAN, submit</td><td><span class="expected">Validation: ABCDE1234F format</span> → <span class="actual">Accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Aadhaar accepts less than 12 digits</td><td>Enter "1234", submit</td><td><span class="expected">Exactly 12 digits required</span> → <span class="actual">Accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>Deposit allows ₹1 despite ₹500 minimum hint</td><td>Enter ₹1, submit</td><td><span class="expected">Validation: min ₹500</span> → <span class="actual">Accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Nominee DOB allows future dates</td><td>Set nominee DOB to next year</td><td><span class="expected">Past only</span> → <span class="actual">Future accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>Joint mode shows no second applicant section</td><td>Select "Joint" operation mode</td><td><span class="expected">Second applicant form appears</span> → <span class="actual">Nothing changes</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>Declaration checkbox not required</td><td>Leave declaration unchecked, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Form submits</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>API returns 201 with no application ID</td><td>Submit, check Network response</td><td><span class="expected"><code>{"applicationId":"..."}</code></span> → <span class="actual">No ID in response</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Net Banking not in API payload</td><td>Enable net banking, inspect Network</td><td><span class="expected"><code>netBanking: true</code></span> → <span class="actual">Field absent</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 9 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🏠</span>
+    <span class="page-title">Page 9 — Real Estate: Property Listing</span>
+    <div class="page-counts">
+      <span class="pill easy">3 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">5 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>All property type icons are 🏠</td><td>Open Property Type dropdown</td><td><span class="expected">Different icon per type</span> → <span class="actual">All show 🏠</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>"Bedrooms" field labeled "Bathrooms"</td><td>View property details section</td><td><span class="expected">First field = "Bedrooms"</span> → <span class="actual">First field = "Bathrooms"</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>Price shows $ symbol in INR context</td><td>View Price field</td><td><span class="expected">₹ symbol</span> → <span class="actual">$ symbol</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">4</td><td><span class="tier-medium">Medium</span></td><td>Price per Sqft = price ÷ bedrooms (not ÷ area)</td><td>List 1000 sqft at ₹5M with 3 BHK</td><td><span class="expected">₹5,000/sqft</span> → <span class="actual">₹1,666,667/sqft</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Available From allows past dates</td><td>Select old date</td><td><span class="expected">Future only</span> → <span class="actual">Past accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Search ignores city/type filters</td><td>Search + filter by city Mumbai</td><td><span class="expected">Only Mumbai results</span> → <span class="actual">All results shown</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>"Parking" and "Car Park" duplicated in amenities</td><td>View Amenities list</td><td><span class="expected">One parking option</span> → <span class="actual">Two identical options</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Only first uploaded photo saved</td><td>Upload 3 photos, inspect payload</td><td><span class="expected">All 3 photo names</span> → <span class="actual">Only first photo</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">9</td><td><span class="tier-hard">Hard</span></td><td>Property age sends string not integer</td><td>Set age 10, inspect payload</td><td><span class="expected"><code>propertyAge: 10</code></span> → <span class="actual"><code>propertyAge: "10 years"</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>Featured toggle has no visible effect</td><td>Toggle featured, post listing</td><td><span class="expected">"Featured" badge on listing</span> → <span class="actual">No difference</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>API returns 200 with empty {} body</td><td>Submit listing, check Network response</td><td><span class="expected"><code>{"listingId":"..."}</code></span> → <span class="actual"><code>{}</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Rent price shown as /month but stored as annual</td><td>List rental at ₹24,000, check display</td><td><span class="expected">₹24,000/year</span> → <span class="actual">₹24,000/month</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Search result count off by one</td><td>List 3 properties, search all</td><td><span class="expected">"Found 3 properties"</span> → <span class="actual">"Found 4 properties"</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 10 -->
+<div class="page-section">
+  <div class="page-header" onclick="toggle(this)">
+    <span class="page-icon">🎫</span>
+    <span class="page-title">Page 10 — Event: Registration</span>
+    <div class="page-counts">
+      <span class="pill easy">4 Easy</span><span class="pill medium">5 Medium</span><span class="pill hard">5 Hard</span>
+    </div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="page-body" style="display:none">
+    <table>
+      <thead><tr><th>#</th><th>Tier</th><th>Bug</th><th>How to Reproduce</th><th>Expected → Actual</th></tr></thead>
+      <tbody>
+        <tr data-tier="easy"><td class="bug-num">1</td><td><span class="tier-easy">Easy</span></td><td>Event banner is pixelated</td><td>View page header image</td><td><span class="expected">Clear logo</span> → <span class="actual">Pixelated</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">2</td><td><span class="tier-easy">Easy</span></td><td>T-shirt size "XXL" missing</td><td>Open T-shirt Size dropdown</td><td><span class="expected">XS–XXL</span> → <span class="actual">XL is last option</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">3</td><td><span class="tier-easy">Easy</span></td><td>All event dates show 2025 (past year)</td><td>Select any event, check date field</td><td><span class="expected">2026 dates</span> → <span class="actual">2025 dates</span></td></tr>
+        <tr data-tier="easy"><td class="bug-num">4</td><td><span class="tier-easy">Easy</span></td><td>"VIP" ticket labeled "VVIP"</td><td>View Ticket Type radios</td><td><span class="expected">"VIP"</span> → <span class="actual">"VVIP"</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">5</td><td><span class="tier-medium">Medium</span></td><td>Student ID upload not shown for Student ticket</td><td>Select Student ticket type</td><td><span class="expected">ID upload appears</span> → <span class="actual">Section stays hidden</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">6</td><td><span class="tier-medium">Medium</span></td><td>Coupon message says 10% but applies 50%</td><td>Enter EVENT50, apply</td><td><span class="expected">Message matches discount</span> → <span class="actual">Message: "10% off", Actual: 50%</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">7</td><td><span class="tier-medium">Medium</span></td><td>More than 10 tickets allowed</td><td>Enter 15 tickets, submit</td><td><span class="expected">Max 10 enforced</span> → <span class="actual">15 accepted</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">8</td><td><span class="tier-medium">Medium</span></td><td>Total doesn't update when ticket type changes</td><td>Select General, then switch to VIP</td><td><span class="expected">Total updates</span> → <span class="actual">Stale total</span></td></tr>
+        <tr data-tier="medium"><td class="bug-num">9</td><td><span class="tier-medium">Medium</span></td><td>Success toast shows even on API error</td><td>Observe toast on any submission</td><td><span class="expected">Error toast on failure</span> → <span class="actual">"Registration Successful" always</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">10</td><td><span class="tier-hard">Hard</span></td><td>Newsletter always sends true</td><td>Uncheck newsletter, submit, inspect payload</td><td><span class="expected"><code>newsletter: false</code></span> → <span class="actual"><code>newsletter: true</code></span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">11</td><td><span class="tier-hard">Hard</span></td><td>API ignores coupon — charges full price</td><td>Apply EVENT50, submit, check API response total</td><td><span class="expected">Discounted total</span> → <span class="actual">Full price in response</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">12</td><td><span class="tier-hard">Hard</span></td><td>Terms not required</td><td>Leave terms unchecked, submit</td><td><span class="expected">Validation error</span> → <span class="actual">Form submits</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">13</td><td><span class="tier-hard">Hard</span></td><td>Card number in payload for UPI/Wallet</td><td>Select UPI, submit, inspect payload</td><td><span class="expected"><code>cardNumber</code> absent</span> → <span class="actual"><code>cardNumber</code> present</span></td></tr>
+        <tr data-tier="hard"><td class="bug-num">14</td><td><span class="tier-hard">Hard</span></td><td>Registrations overwrite (no history)</td><td>Register twice, check list</td><td><span class="expected">Both shown</span> → <span class="actual">Only latest shown</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    const chevron = header.querySelector('.chevron');
+    const hidden = body.style.display === 'none';
+    body.style.display = hidden ? 'block' : 'none';
+    chevron.classList.toggle('open', hidden);
+  }
+
+  function filterTier(tier, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('tbody tr[data-tier]').forEach(row => {
+      row.style.display = (tier === 'all' || row.dataset.tier === tier) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
